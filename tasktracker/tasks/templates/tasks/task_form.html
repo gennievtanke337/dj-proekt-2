@@ -1,0 +1,20 @@
+<h1>Створити задачу</h1>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+
+    <p>
+        <button type="button" onclick="setToday()">Сьогодні</button>
+    </p>
+
+    <script>
+        function setToday() {
+            let today = "{{ today }}"; 
+            document.querySelector("#id_due_date").value = today;  
+        }
+    </script>
+
+    <button type="submit">Зберегти</button>
+</form>
