@@ -1,14 +1,12 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
-from .models import Task
-from .forms import TaskForm, TaskFilterForm
+from .models import Task, Comment
+from .forms import TaskForm, TaskFilterForm, CommentForm
 from datetime import date
-from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.forms import UserCreationForm
-from django.urls import reverse_lazy
-from django.views.generic import CreateView
+from django.shortcuts import redirect
 
 class UserIsOwnerMixin:
     def dispatch(self, request, *args, **kwargs):
@@ -33,7 +31,6 @@ class TaskListView(LoginRequiredMixin, ListView):
             qs = qs.filter(status=status)
         if priority:
             qs = qs.filter(priority=priority)
-
         return qs
 
     def get_context_data(self, **kwargs):
@@ -47,6 +44,41 @@ class TaskDetailView(LoginRequiredMixin, UserIsOwnerMixin, DetailView):
     model = Task
     template_name = 'tasks/task_detail.html'
     context_object_name = 'task'
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        if "add_comment" in request.POST:
+            form = CommentForm(request.POST)
+            if form.is_valid():
+                comment = form.save(commit=False)
+                comment.task = self.object
+                comment.author = request.user
+                comment.save()
+            return redirect('task_detail', pk=self.object.pk)
+
+        if "edit_comment" in request.POST:
+            comment = Comment.objects.get(pk=request.POST.get("comment_id"))
+            if comment.author != request.user:
+                raise PermissionDenied
+            comment.content = request.POST.get("content")
+            comment.save()
+            return redirect('task_detail', pk=self.object.pk)
+
+        if "delete_comment" in request.POST:
+            comment = Comment.objects.get(pk=request.POST.get("comment_id"))
+            if comment.author != request.user:
+                raise PermissionDenied
+            comment.delete()
+            return redirect('task_detail', pk=self.object.pk)
+
+        return redirect('task_detail', pk=self.object.pk)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['comment_form'] = CommentForm()
+        context['comments'] = self.object.comments.all().order_by('-created_at')
+        return context
 
 
 class TaskCreateView(LoginRequiredMixin, CreateView):
@@ -64,6 +96,7 @@ class TaskCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context['today'] = date.today().strftime("%Y-%m-%d")
         return context
+
 
 class RegisterView(CreateView):
     template_name = 'register.html'
@@ -84,5 +117,3 @@ class TaskDeleteView(LoginRequiredMixin, UserIsOwnerMixin, DeleteView):
     model = Task
     template_name = 'tasks/task_confirm_delete.html'
     success_url = reverse_lazy('task_list')
-
-
