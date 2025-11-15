@@ -125,3 +125,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = '/'  # або 'task_list' якщо використовуєш іменовану URL
 LOGOUT_REDIRECT_URL = '/login/'
+
+import os
+
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+

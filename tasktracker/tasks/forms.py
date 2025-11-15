@@ -32,4 +32,8 @@ class TaskFilterForm(forms.Form):
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
-        fields = ['content']
+        fields = ['content', 'file']
+        widgets = {
+            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Ваш коментар'}),
+            'file': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }

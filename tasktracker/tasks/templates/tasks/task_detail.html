@@ -9,6 +9,7 @@
 <body class="bg-light">
 
 <div class="container py-4">
+
     <div class="card shadow-sm mb-4">
         <div class="card-header">
             <h2 class="mb-0">{{ task.title }}</h2>
@@ -32,26 +33,38 @@
     <div class="card mb-2">
         <div class="card-body">
             <p>{{ comment.content }}</p>
+
+            {% if comment.file %}
+                {% with comment.file.url|lower as file_url %}
+                    {% if ".jpg" in file_url or ".jpeg" in file_url or ".png" in file_url or ".gif" in file_url %}
+                        <img src="{{ comment.file.url }}" class="img-fluid mb-2" alt="attachment">
+                    {% else %}
+                        <p><a href="{{ comment.file.url }}" target="_blank">{{ comment.file.name }}</a></p>
+                    {% endif %}
+                {% endwith %}
+            {% endif %}
+
             <small class="text-muted">{{ comment.author.username }} | {{ comment.created_at }}</small>
 
             {% if comment.author == user %}
-            <div class="mt-2 d-flex gap-2">
-
-                <form method="post" style="display:inline;">
+            <div class="mt-2">
+                <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     <input type="hidden" name="comment_id" value="{{ comment.id }}">
-                    <textarea name="content" class="form-control mb-2" rows="2">{{ comment.content }}</textarea>
-                    <button name="edit_comment" class="btn btn-primary btn-sm">Зберегти</button>
+                    <div class="mb-2">
+                        <textarea name="content" class="form-control" rows="2">{{ comment.content }}</textarea>
+                    </div>
+                    <div class="mb-2">
+                        <input type="file" name="file" class="form-control">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button name="edit_comment" class="btn btn-primary btn-sm">Зберегти</button>
+                        <button name="delete_comment" class="btn btn-danger btn-sm">Видалити</button>
+                    </div>
                 </form>
-
-                <form method="post" style="display:inline;">
-                    {% csrf_token %}
-                    <input type="hidden" name="comment_id" value="{{ comment.id }}">
-                    <button name="delete_comment" class="btn btn-danger btn-sm">Видалити</button>
-                </form>
-
             </div>
             {% endif %}
+
         </div>
     </div>
     {% empty %}
@@ -60,7 +73,7 @@
 
     <h4 class="mt-4">Додати коментар</h4>
 
-    <form method="post" class="card p-3 shadow-sm mb-5">
+    <form method="post" enctype="multipart/form-data" class="card p-3 shadow-sm mb-5">
         {% csrf_token %}
         {{ comment_form.as_p }}
         <button name="add_comment" class="btn btn-success">Додати</button>
@@ -68,5 +81,6 @@
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

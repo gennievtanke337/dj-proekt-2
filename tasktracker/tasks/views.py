@@ -49,20 +49,21 @@ class TaskDetailView(LoginRequiredMixin, UserIsOwnerMixin, DetailView):
         self.object = self.get_object()
 
         if "add_comment" in request.POST:
-            form = CommentForm(request.POST)
+            form = CommentForm(request.POST, request.FILES)
             if form.is_valid():
-                comment = form.save(commit=False)
-                comment.task = self.object
-                comment.author = request.user
-                comment.save()
+                c = form.save(commit=False)
+                c.task = self.object
+                c.author = request.user
+                c.save()
             return redirect('task_detail', pk=self.object.pk)
 
         if "edit_comment" in request.POST:
             comment = Comment.objects.get(pk=request.POST.get("comment_id"))
             if comment.author != request.user:
                 raise PermissionDenied
-            comment.content = request.POST.get("content")
-            comment.save()
+            form = CommentForm(request.POST, request.FILES, instance=comment)
+            if form.is_valid():
+                form.save()
             return redirect('task_detail', pk=self.object.pk)
 
         if "delete_comment" in request.POST:

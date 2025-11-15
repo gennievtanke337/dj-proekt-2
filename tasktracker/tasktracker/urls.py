@@ -3,6 +3,10 @@ from django.urls import path
 from tasks.views import TaskListView, TaskDetailView, TaskCreateView, TaskUpdateView, TaskDeleteView
 from django.contrib.auth import views as auth_views
 from tasks.views import RegisterView
+from django.conf import settings
+from django.conf.urls.static import static
+
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -16,3 +20,6 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
 
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
